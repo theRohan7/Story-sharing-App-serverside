@@ -14,12 +14,6 @@ const storySlideSchema = new Schema(
             type: String,
             required: true,
         },
-        Category:{
-            type: String,
-            enum: ["Food" , "Travel" , "Science" , "Nature" , "Technology"] ,
-            default: "Food"
-            
-        },
         likesCount:{
             type: Number,
             default: 0,
@@ -34,6 +28,12 @@ const storySlideSchema = new Schema(
 const storySchema = new Schema (
     {
         storySlides: [ storySlideSchema ],
+        Category:{
+            type: String,
+            enum: ["Food" , "Travel" , "Science" , "Nature" , "Technology"] ,
+            default: "Food"
+            
+        },
         owner: {
             type: mongoose.Types.ObjectId,
             ref: "User",
@@ -46,4 +46,3 @@ const storySchema = new Schema (
 )
 
 export const Story = mongoose.model("Story", storySchema)
-export const StorySlide = mongoose.model("StorySlide", storySlideSchema)
