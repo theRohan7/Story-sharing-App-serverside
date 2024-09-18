@@ -15,11 +15,13 @@ const storySlideSchema = new Schema(
             required: true,
         },
         Category:{
-            enum: "Food" | "Travel" | "Science" | "Nature" | "Technology" ,
-            required: true,
+            type: String,
+            enum: ["Food" , "Travel" , "Science" , "Nature" , "Technology"] ,
+            default: "Food"
+            
         },
         likesCount:{
-            type: number,
+            type: Number,
             default: 0,
         },
     
