@@ -1,57 +1,61 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
-
+import path from "path";
 
 cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET_KEY
-})
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET_KEY,
+});
 
-const uploadOnCloudinary = async (filePath) => {
-    try {
-        if(!filePath) return console.error("Could not find file path :( ")
+const uploadOnCloudinary = async (localFilePath) => {
+    console.log("came to uploadOnCloudinary to uplaod");
+    console.log(localFilePath);
+    
+    
+  try {
+    if (!localFilePath) return console.error("Could not find file path :( ");
 
-            const isVideo = filePath.endsWith('.mp4') || filePath.endsWith('.mov') || filePath.includes('videos')
+    const fileExtension = path.extname(localFilePath)
 
-            if(isVideo){
-                
-                const videoDetails = await cloudinary.api.resource(filePath, { resource_type: 'video' });
 
-                console.log(videoDetails);
-                
-                if(videoDetails.duration > 15){
-                    console.error("Video Durationn exceeds the 15-second limit.")
-                    throw new Error("Video Duration cannot exceed 15 seconds.")
-                }
+    const isVideo = fileExtension === '.mp4' || fileExtension === '.mov'
+      console.log("is is a video ?", isVideo);
+      
 
-                const response = await cloudinary.uploader.upload(filePath, {resource_type: 'video'})
-                console.log("Video uploaded successfully on cloudinary: ", response.url);
-                
-                return response;
+    if (isVideo) {
+      const videoDetails = await cloudinary.api.resource(localFilePath, {
+        resource_type: "video",
+      });
 
-            } else {
+      console.log("Video Details: ",videoDetails);
 
-                const response = await cloudinary.uploader.upload(filePath, {
-                    resource_type: 'auto'
-                })
-                console.log("File uploaded successfully on cloudinary: ", response.url);
-        
-                return response;
+      if (videoDetails.duration > 15) {
+        console.error("Video Durationn exceeds the 15-second limit.");
+        throw new Error("Video Duration cannot exceed 15 seconds.");
+      }
 
-            }
-             
-    } catch (error) {
-        // if (fs.existsSync(filePath)) {
-        //     fs.unlinkSync(filePath); // Remove the file if it exists
-        // } else {
-        //     console.warn("File does not exist, nothing to delete.");
-        // }
+      const response = await cloudinary.uploader.upload(localFilePath, {
+        resource_type: "video",
+      });
+      console.log("Video uploaded successfully on cloudinary: ", response.url);
 
-        // console.error("Error during Cloudinary upload: ", error);
-        return null;
-        
+      return response;
+    } else {
+      const response = await cloudinary.uploader.upload(localFilePath, {
+        resource_type: "auto",
+      });
+      console.log("File uploaded successfully on cloudinary: ", response.url);
+
+      return response;
     }
-}
+  } catch (error) {
+    if (fs.existsSync(localFilePath)) {
+        fs.unlinkSync(localFilePath); // Remove the file if it exists
+     } 
+    console.error("Error while uploading to Cloudinary: ", error.message);
+    return null;
+  }
+};
 
-export { uploadOnCloudinary }
+export { uploadOnCloudinary };

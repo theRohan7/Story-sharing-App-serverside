@@ -4,14 +4,16 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import {Story } from "../models/story.model.js"
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/fileUploader.js";
+import fs from "fs"
+import { Console } from "console";
+import path from "path";
 
 
 const createStory = asyncHandler ( async(req, res) => {
   
     const userId = req.user._id
-
     const {category, slides} = req.body  // slides will be an array of each  slide object
-
+    
     if(!slides || slides.length < 3 || slides.length > 6) {
         throw new ApiError(400, "A story must have slides between 3 and 6")
     }
@@ -23,14 +25,16 @@ const createStory = asyncHandler ( async(req, res) => {
     }
 
     const storySlides = await Promise.all(
-        slides.map(async (slide) => {
-            let uploadedMediaURL = slide.mediaURL
+        slides.map(async (slide, index) => {
+            let uploadedMediaURL = slide.mediaURL;
 
-            if(slide.mediaURL){
-                const uploadedMedia = await uploadOnCloudinary(slide.mediaURL);
+            const localFile = req.files? req.files[`media${index}`] : null;
+
+            if(localFile) {
+                const uploadedMedia = await uploadOnCloudinary(localFile.path);
                 uploadedMediaURL = uploadedMedia.url
             }
-
+            
             return {
                 heading: slide.heading,
                 description: slide.description,
@@ -195,6 +199,47 @@ const filterStories = asyncHandler ( async (req, res) => {
     .json( new ApiResponse(200, stories, "Stories fetched successfully.") )
 })
 
+const incrementLikes = asyncHandler (async (req, res) => {
+    
+   const userId = req.user._id;
+   const  { storyId, slideId } = req.body;
+
+   const story = await Story.findOne(
+    {
+        _id: storyId,
+        "storySlides._id": slideId
+    }
+   );
+
+   if(!story){
+    throw new ApiError(404, "Story or slide not found")
+   }
+    
+   const slideIndex = story.storySlides.findIndex(slide => slide._id.toString() === slideId)
+   const slide = story.storySlides[slideIndex];
+
+   const likedByUser = slide.likedBy.includes(userId);
+
+   if(likedByUser){
+
+    slide.likesCount -= 1
+    slide.likedBy.pull(userId)
+
+   } else {
+
+    slide.likesCount += 1;
+    slide.likedBy.push(userId);
+
+   }
+
+   await story.save({validateBeforeSave: false})
+
+   return res
+   .status(200)
+   .json( new ApiResponse(200, {likesCount: slide.likesCount}, likedByUser ? "Like removed Succesfully" : "Like added succesfully"))
+
+})
+
 
 
 
@@ -205,5 +250,6 @@ export {
     bookmarkStory,
     getAllStory,
     getUserStories,
-    filterStories
+    filterStories,
+    incrementLikes
 }
