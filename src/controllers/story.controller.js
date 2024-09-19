@@ -3,6 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {Story } from "../models/story.model.js"
 import { User } from "../models/user.model.js";
+import { uploadOnCloudinary } from "../utils/fileUploader.js";
 
 
 const createStory = asyncHandler ( async(req, res) => {
@@ -21,14 +22,24 @@ const createStory = asyncHandler ( async(req, res) => {
         throw new ApiError(404, "User Not found");
     }
 
-    const storySlides = slides.map(slide => ({
-        heading: slide.heading,
-        description: slide.description,
-        mediaURL: slide.mediaURL,
-        likesCount: slide.likesCount
-    })) 
+    const storySlides = await Promise.all(
+        slides.map(async (slide) => {
+            let uploadedMediaURL = slide.mediaURL
 
-    
+            if(slide.mediaURL){
+                const uploadedMedia = await uploadOnCloudinary(slide.mediaURL);
+                uploadedMediaURL = uploadedMedia.url
+            }
+
+            return {
+                heading: slide.heading,
+                description: slide.description,
+                mediaURL: uploadedMediaURL,
+                likesCount: slide.likesCount
+            }
+        })
+    )
+ 
     const story = await Story.create({
         owner: userId,
         storySlides: storySlides,
@@ -70,12 +81,23 @@ const editStory = asyncHandler ( async (req, res) => {
         throw new ApiError(403, "You're not Authorized to edit this story.")
     }
 
-    story.storySlides = slides.map(slide => ({
-        heading: slide.heading,
-        description: slide.description,
-        mediaURL: slide.mediaURL,
-        likesCount: slide.likesCount || 0
-    }))
+    story.storySlides = await Promise.all(
+        slides.map(async (slide) => {
+            let uploadedMediaURL = slide.mediaURL
+
+            if(slide.mediaURL){
+                const uploadedMedia = await uploadOnCloudinary(slide.mediaURL);
+                uploadedMediaURL = uploadedMedia.url
+            }
+
+            return {
+                heading: slide.heading,
+                description: slide.description,
+                mediaURL: uploadedMediaURL,
+                likesCount: slide.likesCount || 0
+            }
+        })
+    )
 
     story.updatedAt = Date.now()
     story.Category = category
