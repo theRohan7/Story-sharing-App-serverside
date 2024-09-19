@@ -102,7 +102,7 @@ const editStory = asyncHandler ( async (req, res) => {
     story.updatedAt = Date.now()
     story.Category = category
 
-    await story.save();
+    await story.save({validateBeforeSave: false});
 
    return res
    .status(200)
@@ -137,7 +137,7 @@ const bookmarkStory = asyncHandler ( async (req, res) => {
         user.savedStories.push({ _id: story._id }); // push a new object with the story ID
     }
       
-    await user.save();
+    await user.save({validateBeforeSave: false});
 
     return res
     .status(200)
