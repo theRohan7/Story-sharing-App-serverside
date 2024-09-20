@@ -181,29 +181,19 @@ const getUserStories = asyncHandler( async (req, res) => {
 })
 
 const filterStories = asyncHandler ( async (req, res) => {
-    const { category } = req.query;
-    const existingFilters = req.query.filters || []
+    const { categories } = req.query;
 
-    if(!category){
-        const allStories = await Story.find()
-        return res.json(new ApiResponse(200, allStories, "Stories fetched successfully."))
-    }
+    let stories;
 
-    const index = existingFilters.indexOf(category);
-    if(index === -1) {
-        existingFilters.push(category)
+    if(!categories || categories.length === 0 || categories.includes("All")){
+        stories = await Story.find({})
     } else {
-        existingFilters.splice(index, 1)
+        const categoriesArray = Array.isArray(categories) ? categories : [categories];
+        stories = await Story.find({Category: { $in: categoriesArray}})
     }
-
-    const filterQuery = {}
-    if(existingFilters.length < 0){
-        filterQuery.Category = { $in: existingFilters } 
-    }
-    const stories = await Story.find(filterQuery)
 
     if(stories.length === 0){
-        new ApiResponse(404, "No stories found for this category")
+        new ApiResponse(404, [] ,"No stories found for this category")
     }
 
     return res
