@@ -185,7 +185,7 @@ const filterStories = asyncHandler ( async (req, res) => {
 
     if(!category){
         const allStories = await Story.find()
-        return res.json(new ApiResponse(200, {allStories}, "Stories fetched successfully."))
+        return res.json(new ApiResponse(200, allStories, "Stories fetched successfully."))
     }
 
     const stories = await Story.find({Category: category})
