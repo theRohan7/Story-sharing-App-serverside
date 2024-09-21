@@ -4,9 +4,6 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import {Story } from "../models/story.model.js"
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/fileUploader.js";
-import fs from "fs"
-import { Console } from "console";
-import path from "path";
 
 
 const createStory = asyncHandler ( async(req, res) => {
@@ -56,7 +53,7 @@ const createStory = asyncHandler ( async(req, res) => {
         throw new ApiError(500, "Something went wrong while creating story")
     }
 
-    user.stories.push(storyCreated._id)
+    user.stories.push(storyCreated)
     await user.save();
 
     return res
@@ -111,7 +108,7 @@ const editStory = asyncHandler ( async (req, res) => {
    return res
    .status(200)
    .json(
-    new ApiResponse(200, {story}, "Story updated successfully.")
+    new ApiResponse(200, story, "Story updated successfully.")
    )
     
 })
@@ -138,7 +135,7 @@ const bookmarkStory = asyncHandler ( async (req, res) => {
         const index = user.savedStories.findIndex(savedStory => savedStory._id.equals(story._id));
         user.savedStories.splice(index, 1)
     } else {
-        user.savedStories.push({ _id: story._id }); // push a new object with the story ID
+        user.savedStories.push(story); // push a new object with the story ID
     }
       
     await user.save({validateBeforeSave: false});
@@ -166,14 +163,17 @@ const getAllStory = asyncHandler( async(req, res) => {
 const getUserStories = asyncHandler( async (req, res) => {
     const userId = req.user._id 
 
-    const  user = await User.findById(userId);
-
+    const  user = await User.findById(userId).populate({
+        path: 'stories._id',
+        model: 'Story'
+    });
+    
     if(!user){
         throw new ApiError(404, "User not found")
     }
 
     const userStories = user.stories
-
+    
     return res
     .status(200)
     .json( new ApiResponse(200, userStories,  "Fetched user stories") )
