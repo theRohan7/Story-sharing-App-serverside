@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
-import fs from "fs";
-import path from "path";
+import axios from "axios";
+
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -8,51 +8,68 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET_KEY,
 });
 
-const uploadOnCloudinary = async (localFilePath) => {
-    console.log("came to uploadOnCloudinary to uplaod");
-    console.log(localFilePath);
-    
-    
+const getVideoDuration = async(url) => {
   try {
-    if (!localFilePath) return console.error("Could not find file path :( ");
+    const response = await axios.head(url);
+    console.log(response);
+    
+    const contentLength = response.headers['content-length'];
+    const contentType = response.headers['content-type'];
 
-    const fileExtension = path.extname(localFilePath)
+    // if (!contentType.startsWith('video/')) {
+    //   throw new Error('The provided URL is not a video.');
+    // }
 
+    // Use Cloudinary's remote media info API
+    const result = await cloudinary.uploader.upload(url, {
+      resource_type: 'video',
+      upload_preset: 'ml_default', // Adjust this to your needs
+      format: 'mp4',
+      media_metadata: true,
+      eager: [{ format: 'mp4', audio_codec: 'none', video_codec: 'h264' }],
+      eager_async: true
+    });
 
-    const isVideo = fileExtension === '.mp4' || fileExtension === '.mov'
-      console.log("is is a video ?", isVideo);
-      
+    return result.duration;
+  } catch (error) {
+    console.error('Error fetching video duration:', error);
+    throw error;
+  }
+}
 
+const uploadOnCloudinary = async (fileUrl) => {
+
+  try {
+    if(!fileUrl) throw new Error ("No file Url Provided")
+      console.log(fileUrl);
+
+    const isVideo = fileUrl.match(/\.(mp4|mov|avi|wmv|flv|webm)$/i);
+    const resourceType = isVideo ? "video" : "image"
+      console.log("fileType: ", resourceType);
+  
     if (isVideo) {
-      const videoDetails = await cloudinary.api.resource(localFilePath, {
-        resource_type: "video",
-      });
+      const duration = await getVideoDuration(fileUrl)
 
-      console.log("Video Details: ",videoDetails);
-
-      if (videoDetails.duration > 15) {
-        console.error("Video Durationn exceeds the 15-second limit.");
-        throw new Error("Video Duration cannot exceed 15 seconds.");
+      if(duration > 15){
+        throw new Error("Video duration exceeds the 15-second limit.");
       }
 
-      const response = await cloudinary.uploader.upload(localFilePath, {
-        resource_type: "video",
-      });
-      console.log("Video uploaded successfully on cloudinary: ", response.url);
+      const response = await cloudinary.uploader.upload(fileUrl, {
+        resource_type: "video"
+      })
 
+      console.log("Video uploaded successfully to Cloudinary:", response.url);
       return response;
+
     } else {
-      const response = await cloudinary.uploader.upload(localFilePath, {
-        resource_type: "auto",
+      const response = await cloudinary.uploader.upload(fileUrl, {
+        resource_type: "image",
       });
       console.log("File uploaded successfully on cloudinary: ", response.url);
 
       return response;
     }
   } catch (error) {
-    if (fs.existsSync(localFilePath)) {
-        fs.unlinkSync(localFilePath); // Remove the file if it exists
-     } 
     console.error("Error while uploading to Cloudinary: ", error.message);
     return null;
   }

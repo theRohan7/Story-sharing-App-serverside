@@ -9,7 +9,7 @@ import { uploadOnCloudinary } from "../utils/fileUploader.js";
 const createStory = asyncHandler ( async(req, res) => {
   
     const userId = req.user._id
-    const {category, slides} = req.body  // slides will be an array of each  slide object
+    const {category, slides} = req.body  // slides will be an array of each  slide object 
     
     if(!slides || slides.length < 3 || slides.length > 6) {
         throw new ApiError(400, "A story must have slides between 3 and 6")
@@ -22,23 +22,24 @@ const createStory = asyncHandler ( async(req, res) => {
     }
 
     const storySlides = await Promise.all(
-        slides.map(async (slide, index) => {
-            let uploadedMediaURL = slide.mediaURL;
-
-            const localFile = req.files? req.files[`media${index}`] : null;
-
-            if(localFile) {
-                const uploadedMedia = await uploadOnCloudinary(localFile.path);
-                uploadedMediaURL = uploadedMedia.url
+        slides.map( async (slide) => {
+            let  fileurl = slide.mediaURL;
+            try {
+               const uploadedMedia = await uploadOnCloudinary(fileurl)
+               var uploadedMediaURL = uploadedMedia.url
+                
+            } catch (error) {
+              console.error('Error uploading to Cloudinary:', error); 
+              throw new ApiError(500,error, "Something went wrong while uploading to cloudinary")
             }
-            
+
             return {
                 heading: slide.heading,
                 description: slide.description,
                 mediaURL: uploadedMediaURL,
                 likesCount: slide.likesCount
             }
-        })
+        } )
     )
  
     const story = await Story.create({
