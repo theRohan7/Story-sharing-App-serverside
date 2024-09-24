@@ -12,13 +12,13 @@ const createStory = asyncHandler ( async(req, res) => {
     const {category, slides} = req.body  // slides will be an array of each  slide object 
     
     if(!slides || slides.length < 3 || slides.length > 6) {
-        throw new ApiError(400, "A story must have slides between 3 and 6")
+        return res.json(new ApiResponse(400, {}, "A story must have between 3 and 6 slides"))
     }
 
     const user =await User.findById(userId);
 
     if(!user){
-        throw new ApiError(404, "User Not found");
+        return res.json(new ApiResponse(404, {}, "User Not Found"))
     }
 
     const storySlides = await Promise.all(
@@ -31,7 +31,7 @@ const createStory = asyncHandler ( async(req, res) => {
                 
             } catch (error) {
               console.error('Error uploading to Cloudinary:', error); 
-              throw new ApiError(500,error, "Something went wrong while uploading to cloudinary")
+              return res.status(500).json({message: "Something went wrong while uploading to cloudinary"})
             }
 
             return {
@@ -52,7 +52,7 @@ const createStory = asyncHandler ( async(req, res) => {
     const storyCreated = await Story.findById(story._id)
 
     if(!storyCreated){
-        throw new ApiError(500, "Something went wrong while creating story")
+        return res.json( new ApiResponse(500, "Something went wrong while creating story"))
     }
 
     user.stories.push(storyCreated)

@@ -9,32 +9,25 @@ cloudinary.config({
 });
 
 const getVideoDuration = async(url) => {
-  console.log("getting video Duration for file:", url);
   try {
     
     const response = await axios.head(url);
-    
-    const contentLength = response.headers['content-length'];
-    const contentType = response.headers['content-type'];
 
 
     // Use Cloudinary's remote media info API
     const result = await cloudinary.uploader.upload(url, {
       resource_type: 'video',
-      upload_preset: 'ml_default', // Adjust this to your needs
+      upload_preset: 'ml_default', 
       format: 'mp4',
       media_metadata: true,
       eager: [{ format: 'mp4', audio_codec: 'none', video_codec: 'h264' }],
       eager_async: true
     });
 
-    console.log(result.duration);
-    
-
     return result.duration;
   } catch (error) {
-    console.error('Error fetching video duration:', error);
-    throw error;
+    console.error('Error fetching video duration:', error.message);
+    throw new Error('Failed to fetch video duration');
   }
 }
 
@@ -58,12 +51,11 @@ const uploadOnCloudinary = async (fileUrl) => {
       });
 
       console.log("Video uploaded successfully to Cloudinary:", response.url);
-      return response;
+      return {sucess: true, url: response.url, duration: response.duration};
+
     } catch (error) {
-      console.error(
-        "Error while uploading Video to Cloudinary: ",
-        error.message
-      );
+      console.error("Error while uploading video to Cloudinary:", error.message);
+      throw new Error(error.message || "Failed to upload video to Cloudinary.");
     }
   } else {
     try {
@@ -72,12 +64,10 @@ const uploadOnCloudinary = async (fileUrl) => {
       });
       console.log("File uploaded successfully on cloudinary: ", response.url);
 
-      return response;
+      return {sucess: true, url: response.url};
     } catch (error) {
-      console.error(
-        "Error while uploading image to Cloudinary: ",
-        error.message
-      );
+      console.error("Error while uploading image to Cloudinary:", error.message);
+      throw new Error(error.message || "Failed to upload image to Cloudinary.");
     }
   }
 };
