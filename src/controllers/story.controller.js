@@ -24,6 +24,7 @@ const createStory = asyncHandler ( async(req, res) => {
     const storySlides = await Promise.all(
         slides.map( async (slide) => {
             let  fileurl = slide.mediaURL;
+            
             try {
                const uploadedMedia = await uploadOnCloudinary(fileurl)
                var uploadedMediaURL = uploadedMedia.url

@@ -9,16 +9,14 @@ cloudinary.config({
 });
 
 const getVideoDuration = async(url) => {
+  console.log("getting video Duration for file:", url);
   try {
+    
     const response = await axios.head(url);
-    console.log(response);
     
     const contentLength = response.headers['content-length'];
     const contentType = response.headers['content-type'];
 
-    // if (!contentType.startsWith('video/')) {
-    //   throw new Error('The provided URL is not a video.');
-    // }
 
     // Use Cloudinary's remote media info API
     const result = await cloudinary.uploader.upload(url, {
@@ -30,6 +28,9 @@ const getVideoDuration = async(url) => {
       eager_async: true
     });
 
+    console.log(result.duration);
+    
+
     return result.duration;
   } catch (error) {
     console.error('Error fetching video duration:', error);
@@ -38,40 +39,46 @@ const getVideoDuration = async(url) => {
 }
 
 const uploadOnCloudinary = async (fileUrl) => {
+  if (!fileUrl) throw new Error("No file Url Provided");
 
-  try {
-    if(!fileUrl) throw new Error ("No file Url Provided")
-      console.log(fileUrl);
+  const isVideo = fileUrl.match(/\.(mp4|mov|avi|wmv|flv|webm)$/i);
+  const resourceType = isVideo ? "video" : "image";
 
-    const isVideo = fileUrl.match(/\.(mp4|mov|avi|wmv|flv|webm)$/i);
-    const resourceType = isVideo ? "video" : "image"
-      console.log("fileType: ", resourceType);
-  
-    if (isVideo) {
-      const duration = await getVideoDuration(fileUrl)
+  if (isVideo) {
+    try {
+    
+      const duration = await getVideoDuration(fileUrl);
 
-      if(duration > 15){
+      if (duration > 15) {
         throw new Error("Video duration exceeds the 15-second limit.");
       }
 
       const response = await cloudinary.uploader.upload(fileUrl, {
-        resource_type: "video"
-      })
+        resource_type: "video",
+      });
 
       console.log("Video uploaded successfully to Cloudinary:", response.url);
       return response;
-
-    } else {
+    } catch (error) {
+      console.error(
+        "Error while uploading Video to Cloudinary: ",
+        error.message
+      );
+    }
+  } else {
+    try {
       const response = await cloudinary.uploader.upload(fileUrl, {
         resource_type: "image",
       });
       console.log("File uploaded successfully on cloudinary: ", response.url);
 
       return response;
+    } catch (error) {
+      console.error(
+        "Error while uploading image to Cloudinary: ",
+        error.message
+      );
     }
-  } catch (error) {
-    console.error("Error while uploading to Cloudinary: ", error.message);
-    return null;
   }
 };
 

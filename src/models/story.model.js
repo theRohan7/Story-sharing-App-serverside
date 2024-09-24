@@ -36,7 +36,7 @@ const storySchema = new Schema (
         storySlides: [ storySlideSchema ],
         Category:{
             type: String,
-            enum: ["Food" , "Travel" , "Science" , "Nature" , "Technology"] ,
+            enum: ["Food" , "Travel" , "India" , "Nature" , "Technology", "Medical"] ,
             default: "Food"
             
         },
