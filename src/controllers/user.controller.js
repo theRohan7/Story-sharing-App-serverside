@@ -100,11 +100,29 @@ const logoutUser = asyncHandler ( async (req, res) => {
     .json( new ApiResponse(200, {}, "User logged out."))
 })
 
+const getUserDetails = asyncHandler ( async (req, res) => {
+    const userId = req.user._id
+
+    if(!userId){
+        throw new ApiError(400,"User Id not found")
+    }
+
+    const user = await User.findById(userId).select('-password')
+
+    if(!user){
+        throw new ApiError(404, "User not found")
+    }
+
+    return res
+    .status(200)
+    .json( new ApiResponse(200, user, "user Details"))
+})
 
 
 export {
     registerUser,
     loginUser,
     logoutUser,
+    getUserDetails,
 
 }
