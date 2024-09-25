@@ -24,7 +24,7 @@ router.route("/filter").get(filterStories)
 // secured Routes
 router.route("/create-story").post( verifyJWT, uploadMultiple ,createStory)
 router.route("/edit-story/:storyId").post( verifyJWT, editStory)
-router.route("/bookmark/:storyId").post( verifyJWT, bookmarkStory)
+router.route("/bookmark/:storyId").put( verifyJWT, bookmarkStory)
 router.route("/user-stories").get( verifyJWT, getUserStories)
 router.route("/increment-likes").post( verifyJWT, incrementLikes)
 

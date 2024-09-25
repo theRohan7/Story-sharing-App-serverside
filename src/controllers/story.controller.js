@@ -137,7 +137,7 @@ const bookmarkStory = asyncHandler ( async (req, res) => {
         const index = user.savedStories.findIndex(savedStory => savedStory._id.equals(story._id));
         user.savedStories.splice(index, 1)
     } else {
-        user.savedStories.push(story); // push a new object with the story ID
+        user.savedStories.push(story._id); // push a new object with the story ID
     }
       
     await user.save({validateBeforeSave: false});
@@ -145,7 +145,7 @@ const bookmarkStory = asyncHandler ( async (req, res) => {
     return res
     .status(200)
     .json(
-        new ApiResponse(200, {user}, "Story Bookmarked!")
+        new ApiResponse(200, user, "Story Bookmarked!")
     )
 })
 
