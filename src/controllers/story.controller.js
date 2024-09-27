@@ -244,6 +244,20 @@ const incrementLikes = asyncHandler (async (req, res) => {
 
 })
 
+const getStoryById = asyncHandler( async (req, res) => {
+
+    const {storyId} = req.params;
+    const story = await Story.findById(storyId)
+
+    if(!story){
+        throw new ApiError(404, "Story not found")
+    }
+    
+    return res
+    .status(200)
+    .json( new ApiResponse(200, story, "Story fetched successfully."))
+})
+
 
 
 
@@ -255,5 +269,6 @@ export {
     getAllStory,
     getUserStories,
     filterStories,
-    incrementLikes
+    incrementLikes,
+    getStoryById
 }
