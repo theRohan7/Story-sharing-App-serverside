@@ -118,7 +118,11 @@ const editStory = asyncHandler ( async (req, res) => {
 const bookmarkStory = asyncHandler ( async (req, res) => {
     
     const userId = req.user._id;
+    console.log("userId:",userId);
+    
     const {storyId} = req.params;
+    console.log("storyId: ",storyId);
+    
 
     const user = await User.findById(userId)
 
@@ -163,23 +167,27 @@ const getAllStory = asyncHandler( async(req, res) => {
 })
 
 const getUserStories = asyncHandler( async (req, res) => {
-    const userId = req.user._id 
+     const userID = req.user._id;
 
-    const  user = await User.findById(userId).populate({
-        path: 'stories._id',
-        model: 'Story'
-    });
+     console.log(userID);
+
+     const user = await User.findById(userID);
     
-    if(!user){
-        throw new ApiError(404, "User not found")
+    if (!user) {
+        throw new ApiError(404, "User not found");
     }
 
-    const userStories = user.stories
-    
-    return res
-    .status(200)
-    .json( new ApiResponse(200, userStories,  "Fetched user stories") )
-    
+    const userStories = await Story.find({ _id: { $in: user.stories } })
+
+    if(!userStories){
+        throw new ApiError(404, "No stories found for this user")
+    }
+
+     return res
+     .status(200)
+     .json( new ApiResponse(200, userStories, "Fetched user stories") )
+
+     
 })
 
 const filterStories = asyncHandler ( async (req, res) => {
