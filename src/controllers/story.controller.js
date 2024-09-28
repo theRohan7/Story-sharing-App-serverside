@@ -169,8 +169,6 @@ const getAllStory = asyncHandler( async(req, res) => {
 const getUserStories = asyncHandler( async (req, res) => {
      const userID = req.user._id;
 
-     console.log(userID);
-
      const user = await User.findById(userID);
     
     if (!user) {
