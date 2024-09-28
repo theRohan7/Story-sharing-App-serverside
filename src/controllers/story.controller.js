@@ -141,7 +141,7 @@ const bookmarkStory = asyncHandler ( async (req, res) => {
         const index = user.savedStories.findIndex(savedStory => savedStory._id.equals(story._id));
         user.savedStories.splice(index, 1)
     } else {
-        user.savedStories.push(story._id); // push a new object with the story ID
+        user.savedStories.push(story._id); 
     }
       
     await user.save({validateBeforeSave: false});
@@ -264,6 +264,28 @@ const getStoryById = asyncHandler( async (req, res) => {
     .json( new ApiResponse(200, story, "Story fetched successfully."))
 })
 
+const getBookmarkedStories = asyncHandler( async (req, res) => {
+    const userID = req.user._id;
+
+     const user = await User.findById(userID);
+    
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    const bookmarkedStories = await Story.find({ _id: { $in: user.savedStories } })
+
+    if(!bookmarkedStories){
+        throw new ApiError(404, "No stories found for this user")
+    }
+
+     return res
+     .status(200)
+     .json( new ApiResponse(200, bookmarkedStories, "Fetched Bookmarked stories") )
+
+   
+})
+
 
 
 
@@ -276,5 +298,6 @@ export {
     getUserStories,
     filterStories,
     incrementLikes,
-    getStoryById
+    getStoryById,
+    getBookmarkedStories,
 }

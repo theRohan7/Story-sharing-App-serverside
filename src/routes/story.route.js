@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js"
-import { bookmarkStory, createStory, editStory, filterStories, getAllStory, getStoryById, getUserStories , incrementLikes } from "../controllers/story.controller.js";
+import { bookmarkStory, createStory, editStory, filterStories, getAllStory, getBookmarkedStories, getStoryById, getUserStories , incrementLikes } from "../controllers/story.controller.js";
 
 const router = Router()
 
@@ -17,6 +17,7 @@ const uploadMultiple = upload.fields([
 //General routes
 
 router.route('/user-stories').get(verifyJWT, getUserStories);
+router.route('/bookmark-stories').get(verifyJWT, getBookmarkedStories);
 router.route("/").get(getAllStory)
 router.route("/filter").get(filterStories)
 router.route("/:storyId").get(getStoryById)
