@@ -30,6 +30,9 @@ const registerUser = asyncHandler( async (req, res) => {
         savedStories: []
     })
 
+    const token = await user.generateToken()
+    await user.save({validateBeforeSave:  false})
+
     const createdUser = await User.findById(user._id).select("-password")
 
     if(!createdUser){
@@ -38,7 +41,7 @@ const registerUser = asyncHandler( async (req, res) => {
 
     return res
     .status(201)
-    .json( new ApiResponse(200, createdUser, "user registered successfully.") )
+    .json( new ApiResponse( 200, { user: createdUser, token }, "user registered successfully.") )
 
 })
 
