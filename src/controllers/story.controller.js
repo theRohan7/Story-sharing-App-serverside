@@ -12,13 +12,25 @@ const createStory = asyncHandler ( async(req, res) => {
     const {category, slides} = req.body  // slides will be an array of each  slide object 
     
     if(!slides || slides.length < 3 || slides.length > 6) {
-        return res.json(new ApiResponse(400, {}, "A story must have between 3 and 6 slides"))
+        throw new ApiError(400, "A story must have slides between 3 and 6")
     }
+
+    slides.forEach((slide, idx) =>{
+        if(!slide.heading || slide.heading.trim() === "") {
+            throw new ApiError(400, `Slide ${idx + 1}: Heading is required.`)
+        }
+        if(!slide.description || slide.description.trim() === "") {
+            throw new ApiError(400, `Slide ${idx + 1}: Description is required.`)
+        }
+        if(!slide.mediaURL || slide.mediaURL.trim() === "") {
+            throw new ApiError(400, `Slide ${idx + 1}: Media URL is required.`)
+        }
+    } )
 
     const user =await User.findById(userId);
 
     if(!user){
-        return res.json(new ApiResponse(404, {}, "User Not Found"))
+        throw new ApiError(404, "User not found");
     }
 
     const storySlides = await Promise.all(
@@ -31,14 +43,14 @@ const createStory = asyncHandler ( async(req, res) => {
                 
             } catch (error) {
               console.error('Error uploading to Cloudinary:', error); 
-              return res.status(500).json({message: "Something went wrong while uploading to cloudinary"})
+              throw new ApiError(500, error.message ||  "Failed to upload image to Cloudinary");
             }
 
             return {
                 heading: slide.heading,
                 description: slide.description,
                 mediaURL: uploadedMediaURL,
-                likesCount: slide.likesCount
+                likesCount: slide.likesCount || 0
             }
         } )
     )
@@ -52,16 +64,14 @@ const createStory = asyncHandler ( async(req, res) => {
     const storyCreated = await Story.findById(story._id)
 
     if(!storyCreated){
-        return res.json( new ApiResponse(500, "Something went wrong while creating story"))
+        throw new ApiError(500, "Something went wrong while creating the story, Try Again.");
     }
-
     user.stories.push(storyCreated)
     await user.save();
 
     return res
     .status(201)
     .json( new ApiResponse(200, storyCreated, "Story created successfully"))
-
 })
 
 const editStory = asyncHandler ( async (req, res) => {

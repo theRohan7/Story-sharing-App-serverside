@@ -26,7 +26,6 @@ const getVideoDuration = async(url) => {
 
     return result.duration;
   } catch (error) {
-    console.error('Error fetching video duration:', error.message);
     throw new Error('Failed to fetch video duration');
   }
 }
@@ -54,7 +53,6 @@ const uploadOnCloudinary = async (fileUrl) => {
       return {sucess: true, url: response.url, duration: response.duration};
 
     } catch (error) {
-      console.error("Error while uploading video to Cloudinary:", error.message);
       throw new Error(error.message || "Failed to upload video to Cloudinary.");
     }
   } else {
@@ -66,7 +64,6 @@ const uploadOnCloudinary = async (fileUrl) => {
 
       return {sucess: true, url: response.url};
     } catch (error) {
-      console.error("Error while uploading image to Cloudinary:", error.message);
       throw new Error(error.message || "Failed to upload image to Cloudinary.");
     }
   }
