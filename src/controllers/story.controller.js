@@ -15,6 +15,10 @@ const createStory = asyncHandler ( async(req, res) => {
         throw new ApiError(400, "A story must have slides between 3 and 6")
     }
 
+    if(!category || category.trim() === "") {
+        throw new ApiError(400, "Category is required")
+    }
+
     slides.forEach((slide, idx) =>{
         if(!slide.heading || slide.heading.trim() === "") {
             throw new ApiError(400, `Slide ${idx + 1}: Heading is required.`)
@@ -89,6 +93,22 @@ const editStory = asyncHandler ( async (req, res) => {
     if(!story){
         throw new ApiError(404, "Story not found");
     }
+
+    if(!category || category.trim() === "") {
+        throw new ApiError(400, "Category is required")
+    }
+
+    slides.forEach((slide, idx) =>{
+        if(!slide.heading || slide.heading.trim() === "") {
+            throw new ApiError(400, `Slide ${idx + 1}: Heading is required.`)
+        }
+        if(!slide.description || slide.description.trim() === "") {
+            throw new ApiError(400, `Slide ${idx + 1}: Description is required.`)
+        }
+        if(!slide.mediaURL || slide.mediaURL.trim() === "") {
+            throw new ApiError(400, `Slide ${idx + 1}: Media URL is required.`)
+        }
+    } )
 
     if(story.owner.toString() !== userId.toString()){
         throw new ApiError(403, "You're not Authorized to edit this story.")
